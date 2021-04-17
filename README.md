@@ -10,6 +10,12 @@ $ brew install rustup-init
 $ rustup-init # select default on prompt
 ...
 $ exec $SHELL -l
+$ rustup target add x86_64-unknown-linux-musl
+...
+$ brew install filosottile/musl-cross/musl-cross
+...
+$ echo '[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"' >> ~/.cargo/config
 $
 ```
 
@@ -33,18 +39,19 @@ $ cargo build
 ## Build for AWS
 
 ```shell-session
-$ docker container run --rm \
-    -v $PWD:/code \
-    -v $HOME/.cargo/registry:/root/.cargo/registry \
-    -v $HOME/.cargo/git:/root/.cargo/git \
-    softprops/lambda-rust
+$ cargo build --release --target x86_64-unknown-linux-musl
+...
+$ (cd target/x86_64-unknown-linux-musl/release && \
+    cp hello-rust-lambda bootstrap && \
+    zip -j bootstrap.zip bootstrap && \
+    rm bootstrap)
 ...
 $
 ```
 
 ## Upload to AWS and run test
 
-Upload `target/lambda/release/hello-rust-lambda.zip` to AWS Lambda.
+Upload `target/x86_64-unknown-linux-musl/release/bootstrap.zip` to AWS Lambda.
 And test with the following JSON.
 
 ```json

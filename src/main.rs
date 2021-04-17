@@ -1,6 +1,5 @@
-use lambda_runtime::{error::HandlerError, lambda, Context};
+use lambda_runtime::{handler_fn, Context, Error};
 use serde::{Deserialize, Serialize};
-use std::error::Error as StdError;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,12 +14,13 @@ struct CustomOutput {
     message: String,
 }
 
-fn main() -> Result<(), Box<dyn StdError>> {
-    lambda!(handler);
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    lambda_runtime::run(handler_fn(move |e, c| handler(e, c))).await?;
     Ok(())
 }
 
-fn handler(event: CustomEvent, _context: Context) -> Result<CustomOutput, HandlerError> {
+async fn handler(event: CustomEvent, _context: Context) -> Result<CustomOutput, Error> {
     Ok(CustomOutput {
         message: format!("Helli, {} {}!", event.given_name, event.family_name),
     })
